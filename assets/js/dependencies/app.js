@@ -74,14 +74,11 @@ io.socket.on('connect', function socketConnected() {
 
     //Subscribing to the user model
     io.socket.get('/user/subscribe', function (data) {
-        console.log(data);
     });
     // Attach a listener which fires every time the server publishes a message:
     io.socket.on('user', function newMessageFromSails(message) {
-
-        io.socket.post('/user/updateUserStatus', message.data, function(resData, jwRes){
-            jwRes.statusCode;
-        });
+      socket.emit('user', message.data);
+      console.log("emitting shit ");
     });
 
 

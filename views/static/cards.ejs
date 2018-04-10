@@ -1,0 +1,130 @@
+<script>
+  $(function () {
+    // Could also be ['.sort-me', '#also-sort-me']
+    $('.sort-me').sortable({
+      connectWith: '.sort-me, #also-sort-me',
+      placeholder: "testclass",
+      forcePlaceholderSize: true
+    });
+    $('#also-sort-me').sortable({
+      connectWith: '.sort-me, #also-sort-me',
+      placeholder: "testclass",
+      forcePlaceholderSize: true
+    }); // This one isn't connected back.
+  });
+
+</script>
+
+<div class='container' style="overflow-x:scroll;overflow-y: hidden;">
+  <h3>.sort-me:</h3>
+  <div id="sort-me" class='sort-me'>
+    <div class="sticky">
+      <b>Card 1</b> Put any text in here.
+    </div>
+    <div class="sticky">
+      <b>Card 2</b> Put any text in here.
+    </div>
+  </div>
+  <div id="sort-me" class='sort-me'>
+    <div class="sticky">
+      <b>Card 3</b> Put any text in here.
+    </div>
+    <div class="sticky">
+      <b>Card 4</b> Put any text in here.
+    </div>
+  </div>
+  <!-- <h3>#also-sort-me:</h3> -->
+  <div id='also-sort-me' class="sort-me">
+    <div class="sticky">
+      <b>Card 5</b> Put any text in here.
+    </div>
+    <div class="sticky">
+      <b>Card 6</b> Put any text in here.
+    </div>
+    <div class="sticky">
+        <b>Card 7</b> Put any text in here.
+      </div>
+  </div>
+  <div id='also-sort-me' class="sort-me">
+    <div class="sticky">
+      <b>Card 8</b> Put any text in here.
+    </div>
+    <div class="sticky">
+      <b>Card 9</b> Put any text in here.
+    </div>
+  </div>
+</div>
+
+
+<style>
+  /* li {
+        background-color: #ffcb05;
+        margin: 5px;
+        padding: 5px;
+        cursor: move;
+    } */
+
+  .sort-me {
+    /* background-color: #00274c; */
+    min-height: 30px;
+    margin: 10px;
+    padding: 10px;
+    width: auto;
+    vertical-align: top;
+    display: inline-block;
+  }
+
+  .testclass {
+    background-color: gray;
+    border: 2px solid gray;
+    width: 100%;
+    height: 100%;
+  }
+
+  .sticky {
+    /* position: absolute; */
+    right: 0;
+    z-index: 150;
+    /* transform: rotate(5deg); */
+    width: 200px;
+    min-height: 150px;
+    margin: 10px 10px 10px;
+    padding: 10px;
+    /* font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive; */
+    font-size: 14px;
+    color: #000;
+    background: rgba(255, 255, 51, 0.8);
+    box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .sticky:before,
+  .sticky:after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 0;
+    right: 0;
+  }
+
+  .sticky:before {
+    border-top: solid 8px #fff;
+    border-right: solid 8px #fff;
+    border-left: solid 8px transparent;
+    border-bottom: solid 8px transparent;
+  }
+
+  .sticky:after {
+    border-bottom: solid 8px #dddd33;
+    border-left: solid 8px #dddd33;
+    border-right: solid 8px transparent;
+    border-top: solid 8px transparent;
+  }
+
+  .ui-helper {
+    width: 100% !important;
+  }
+
+</style>
+

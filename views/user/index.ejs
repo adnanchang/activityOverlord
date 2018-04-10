@@ -1,53 +1,66 @@
+<script>
+
+  $(document).ready(function () {
+
+    var token = $('input[name="csrfToken"]').attr('value')
+    $.ajaxSetup({
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('Csrf-Token', token);
+      }
+    });
+
+
+    function fetchData() {
+      $.ajax({
+        url: '/user/allUsers',
+        success: function (data) {
+          console.log(data);
+          $("#myUsers").find("tr:gt(0)").remove();
+          $.each(data.users, function(i, item) {
+            var row = $("<tr />");
+            $("#myUsers").append(row);
+            if (item.online) {
+              row.append($("<td><i class=\"fas fa-check-circle\" style=\"color: green\"></i></td>"));
+            }
+            else {
+              row.append($("<td><i class=\"fas fa-times-circle\" style=\"color: red\"></i></td>"));
+            }
+            row.append($("<td>" + item.id + "</td>"));
+            row.append($("<td>" + item.name + "</td>"));
+            row.append($("<td>" + item.title + "</td>"));
+            row.append($("<td>" + item.email + "</td>"));
+            row.append($("<td><a href=\"/user/show/" + item.id + "\" class=\"btn btn-sm btn-primary\">Show</a></td>"));
+            row.append($("<td><a href=\"/user/edit/" + item.id + "\" class=\"btn btn-sm btn-warning\">Edit</a></td>"));
+          });
+        }
+      });
+    }
+
+
+    var socket = io.connect();
+    socket.on('connect', function () {
+      console.log('connected Jquery');
+    });
+    io.socket.on('user', function (msg) {
+      fetchData();
+    });
+
+    fetchData();
+  });
+</script>
+
 <div class="container">
-    <h3>Users</h3>
-    <table class="table">
-        <tr>
-            <th></th>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Title</th>
-            <th>Email</th>
-            <th></th>
-            <th></th>
-            <th></th>
-        </tr>
+  <h3>Users</h3>
+  <table id="myUsers" class="table">
+    <tr>
+      <th></th>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Title</th>
+      <th>Email</th>
+      <th></th>
+      <th></th>
+    </tr>
 
-        <% _.each(users, function(user) { %>
-            <tr data-id="<%= user.id %>" data-model="user">
-                <td>
-                    <% if (user.online) { %>
-                        <i class="fas fa-check-circle" style="color: green"></i>
-                        <% }  else { %>
-                            <i class="fas fa-times-circle" style="color: red"></i>
-                            <% } %>
-                </td>
-                <td>
-                    <%= user.id %>
-                </td>
-                <td>
-                    <%= user.name %>
-                </td>
-                <td>
-                    <%= user.title %>
-                </td>
-                <td>
-                    <%= user.email %>
-                </td>
-                <td>
-                    <a href="/user/show/<%= user.id %>" class="btn btn-sm btn-primary">Show</a>
-                </td>
-                <td>
-                    <a href="/user/edit/<%= user.id %>" class="btn btn-sm btn-warning">Edit</a>
-                </td>
-
-                <td>
-                    <form action="/user/destroy/<%= user.id %>" method="POST">
-                        <input type="hidden" name="_method" value="delete" />
-                        <input type="submit" value="Delete" class="btn btn-sm btn-danger">
-                        <input type="hidden" name="_csrf" value="<%= _csrf %>" />
-                    </form>
-                </td>
-            </tr>
-            <% }) %>
-    </table>
+  </table>
 </div>

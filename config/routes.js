@@ -34,6 +34,9 @@ module.exports.routes = {
 
   '/': {
     view: 'static/index'
+  },
+  '/cards': {
+    view: 'static/cards'
   }
 
   /***************************************************************************
@@ -45,5 +48,4 @@ module.exports.routes = {
   * for configuration options and examples.                                  *
   *                                                                          *
   ***************************************************************************/
-
 };
