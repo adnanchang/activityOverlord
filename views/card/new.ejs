@@ -1,0 +1,37 @@
+<div class="container">
+    <form action="/card/create" id="cardForm" method="POST" class="form-signin">
+        <fieldset>
+            <legend>Create a Card</legend>
+
+            <% if(flash && flash.err) { %>
+                <ul class="alert alert-success">
+                    <% Object.keys(flash.err).forEach(function(error) { %>
+                        <li>
+                            <%- JSON.stringify(flash.err[error]) %>
+                        </li>
+                        <% }) %>
+                </ul>
+                <% } %>
+
+                    <div class="form-group">
+                        <label for="title">Card Title</label>
+                        <input type="text" class="form-control" name="title" placeholder="Enter Card Title">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Card Description</label>
+                        <input type="text" class="form-control" name="description" placeholder="Enter Card Description">
+                    </div>
+                    <div class="form-group">
+                        <label for="column">Card Column</label>
+                        <input type="number" class="form-control" name="column" placeholder="Enter Column">
+                    </div>
+                    <div class="form-group">
+                        <label for="row">Card Row</label>
+                        <input type="number" class="form-control" name="row" placeholder="Enter Row">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+        </fieldset>
+    </form>
+</div>

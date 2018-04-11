@@ -33,6 +33,10 @@ module.exports.policies = {
     'create': 'flash',
     subscribe: 'flash',
     '*': 'sessionAuth'
+  },
+
+  card: {
+    create: 'flash'
   }
   /***************************************************************************
   *                                                                          *

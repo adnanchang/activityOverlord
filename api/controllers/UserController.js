@@ -11,7 +11,6 @@ module.exports = {
   },
 
   create: function(req, res, next) {
-    console.log("in the create function");
     // req.params.online = true;
     User.create(req.params.all(), function userCreated(err, user) {
       if (err) {
