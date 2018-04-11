@@ -14,11 +14,13 @@
         connectWith: "div[id^='sort-me']",
         placeholder: "testclass",
         forcePlaceholderSize: true,
-        update: function(event, ui) {
-          console.log(event);
+        update: function (event, ui) {
+          var array = $("div[id^='sort-me']").sortable('toArray');
+          console.log(array);
         }
       });
       $("div[id^='sort-me']").sortable('refresh');
+
     }
 
     $('#also-sort-me').sortable({
