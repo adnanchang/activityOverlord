@@ -1,13 +1,6 @@
 <script>
   $(document).ready(function () {
 
-    var token = $('input[name="csrfToken"]').attr('value')
-    $.ajaxSetup({
-      beforeSend: function (xhr) {
-        xhr.setRequestHeader('Csrf-Token', token);
-      }
-    });
-
     // Could also be ['.sort-me', '#also-sort-me']
     function makeSortable() {
       $("div[id^='sort-me']").sortable({
@@ -15,8 +8,46 @@
         placeholder: "testclass",
         forcePlaceholderSize: true,
         update: function (event, ui) {
-          var array = $("div[id^='sort-me']").sortable('toArray');
-          console.log(array);
+          //In order to update database
+          //the whole list needs to be updated
+          //Because moving one item updates positions of all elements
+
+          //Getting the parent DIV
+          var parent =  $(ui.item).parent();
+          var newOrderOfList = parent.sortable("toArray");
+
+          var parent_id = $(ui.item).parent().attr('id');
+          var column = parent_id.slice(8);
+
+          var Cards = []; //Variable to contain all cards
+          var row = 1;
+          $.each(newOrderOfList, function(i, item){
+            var newItem = {
+              id: item,
+              row: row,
+              column: column
+            }
+            Cards.push(newItem);
+            row++;
+          });
+
+          //Updating database with new position of card
+          $.ajax({
+            url: '/card/update',
+            type: "POST",
+            data: {
+              'Cards': Cards
+            },
+            success: function (data) {
+              // REFRESH THE BOARD
+            }
+          });
+        },
+        receive: function (event, ui) {
+          //When something comes in from a new list, this function is triggered
+        },
+        stop: function (event, ui) {
+
         }
       });
       $("div[id^='sort-me']").sortable('refresh');
@@ -39,14 +70,14 @@
           $.each(data.cards, function (i, card) {
             if (card.row == 1) {
               $("#cardContainer").append('<div id=\"sort-me-' + card.column + '\" class=\'sort-me\'>' +
-                '<div id="' + card.column + '-' + card.row + '" class="sticky">' +
+                '<div id="' + card.id + '" class="sticky" sort="' + card.row + '">' +
                 '<b>' + card.title + '</b> <br>' +
                 card.description +
                 '</div> </div>'
               );
             } else {
               $("#sort-me-" + card.column).append(
-                '<div id="' + card.column + '-' + card.row + '" class="sticky">' +
+                '<div id="' + card.id + '" class="sticky" sort="' + card.row + '">' +
                 '<b>' + card.title + '</b> <br>' +
                 card.description +
                 '</div>'
@@ -144,7 +175,6 @@
   .ui-helper {
     width: 100% !important;
   }
-
 </style>
 
 <!-- <div id="sort-me" class='sort-me'>
@@ -183,4 +213,3 @@
       <b>Card 9</b> Put any text in here.
     </div>
   </div> -->
-

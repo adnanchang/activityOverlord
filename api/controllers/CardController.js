@@ -27,7 +27,10 @@ module.exports = {
 
   allCards: function(req, res, next) {
     Card.find()
-      .sort("column ASC")
+      .sort({
+        column: 1,
+        row: 1
+      })
       .exec(function(err, cards) {
         if (err) return next(err);
 
@@ -37,5 +40,25 @@ module.exports = {
           cards: cards
         });
       });
+  },
+
+  update: function(req, res, next) {
+    var Cards = req.param("Cards");
+    Cards.forEach(element => {
+      Card.update(
+        element.id,
+        {
+          column: element.column,
+          row: element.row
+        },
+        function cardUpdated(err) {
+          if (err) {
+            res.redirect("/cards");
+          }
+        }
+      );
+    });
+
+    res.send(200);
   }
 };
