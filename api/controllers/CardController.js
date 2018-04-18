@@ -44,6 +44,7 @@ module.exports = {
 
   update: function(req, res, next) {
     var Cards = req.param("Cards");
+    console.log(Cards);
     Cards.forEach(element => {
       Card.update(
         element.id,
@@ -53,12 +54,24 @@ module.exports = {
         },
         function cardUpdated(err) {
           if (err) {
-            res.redirect("/cards");
+            console.log(err);
           }
         }
       );
     });
 
+    Card.publishUpdate(Cards[0].id, {
+      verb: "updated"
+    }, req);
     res.send(200);
+  },
+
+  subscribe: function(req, res, next) {
+    Card.find(function foundUser(err, cards) {
+      if (err) next(err);
+      // User.subscribe(req.socket);
+      Card.subscribe(req.socket, cards);
+      res.send(200, cards);
+    });
   }
 };

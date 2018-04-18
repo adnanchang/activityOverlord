@@ -13,7 +13,7 @@
           //Because moving one item updates positions of all elements
 
           //Getting the parent DIV
-          var parent =  $(ui.item).parent();
+          var parent = $(ui.item).parent();
           var newOrderOfList = parent.sortable("toArray");
 
           var parent_id = $(ui.item).parent().attr('id');
@@ -21,7 +21,7 @@
 
           var Cards = []; //Variable to contain all cards
           var row = 1;
-          $.each(newOrderOfList, function(i, item){
+          $.each(newOrderOfList, function (i, item) {
             var newItem = {
               id: item,
               row: row,
@@ -54,19 +54,14 @@
 
     }
 
-    $('#also-sort-me').sortable({
-      connectWith: '.sort-me, #also-sort-me',
-      placeholder: "testclass",
-      forcePlaceholderSize: true
-    }); // This one isn't connected back.
-
     function fetchData() {
       $.ajax({
         url: '/card/allCards',
         success: function (data) {
-          console.log(data);
           // $("#cardContainer").append('<div>hello</div>');
 
+          //First of all we empty the DIV if there's anything there
+          $("#cardContainer").empty();
           $.each(data.cards, function (i, card) {
             if (card.row == 1) {
               $("#cardContainer").append('<div id=\"sort-me-' + card.column + '\" class=\'sort-me\'>' +
@@ -94,14 +89,25 @@
     }
 
     fetchData();
-    // makeSortable();
+
+    var socket = io.connect();
+    socket.on('connect', function () {
+      console.log('connected Jquery Cards');
+    });
+    io.socket.on('card', function (msg) {
+      console.log('fetching data');
+      fetchData();
+    });
   });
 
 </script>
-
-<div id="cardContainer" class='container' style="overflow-x:scroll;overflow-y: hidden;">
+<div class="container">
   <a href="/card/new" class="btn btn-primary">New Card</a>
   <h3>.sort-me:</h3>
+</div>
+
+<div id="cardContainer" class='container' style="overflow-x:scroll;overflow-y: hidden;">
+
 
 </div>
 

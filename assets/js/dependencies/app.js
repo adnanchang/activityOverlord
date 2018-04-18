@@ -72,13 +72,16 @@ io.socket.on('connect', function socketConnected() {
             '`socket.get("/foo", function (response) { console.log(response); })`'
         );
 
-    //Subscribing to the user model
+    //Subscribing to the card model
     io.socket.get('/user/subscribe', function (data) {
     });
+
+    io.socket.get('/card/subscribe', function(data){
+    });
     // Attach a listener which fires every time the server publishes a message:
-    io.socket.on('user', function newMessageFromSails(message) {
-      socket.emit('user', message.data);
-      console.log("emitting shit ");
+    io.socket.on('card', function newMessageFromSails(message) {
+      socket.emit('card', message.data);
+      console.log("GOT A MESSAGE");
     });
 
 
