@@ -37,6 +37,9 @@ module.exports.routes = {
   },
   '/cards': {
     view: 'static/cards'
+  },
+  '/cards2': {
+    view: 'static/cards2'
   }
 
   /***************************************************************************
