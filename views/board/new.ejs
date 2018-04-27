@@ -1,0 +1,24 @@
+<div class="container">
+    <form action="/board/create" id="cardForm" method="POST" class="form-signin">
+        <fieldset>
+            <legend>Create a Board</legend>
+
+            <% if(flash && flash.err) { %>
+                <ul class="alert alert-success">
+                    <% Object.keys(flash.err).forEach(function(error) { %>
+                        <li>
+                            <%- JSON.stringify(flash.err[error]) %>
+                        </li>
+                        <% }) %>
+                </ul>
+                <% } %>
+
+                    <div class="form-group">
+                        <label for="columns">Board Columns</label>
+                        <input type="number" class="form-control" name="columns" placeholder="Enter Board Columns">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+        </fieldset>
+    </form>
+</div>

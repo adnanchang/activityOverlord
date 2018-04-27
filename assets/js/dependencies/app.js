@@ -81,7 +81,6 @@ io.socket.on('connect', function socketConnected() {
     // Attach a listener which fires every time the server publishes a message:
     io.socket.on('card', function newMessageFromSails(message) {
       socket.emit('card', message.data);
-      console.log("GOT A MESSAGE");
     });
 
 

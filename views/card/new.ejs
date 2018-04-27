@@ -29,9 +29,8 @@
                         <label for="row">Card Row</label>
                         <input type="number" class="form-control" name="row" placeholder="Enter Row">
                     </div>
-
+                    <input type="hidden" name="board" value="<%=boardID%>">
                     <button type="submit" class="btn btn-primary">Submit</button>
-                    <input type="hidden" name="_csrf" value="<%= _csrf %>" />
         </fieldset>
     </form>
 </div>

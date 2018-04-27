@@ -40,6 +40,12 @@ module.exports.routes = {
   },
   '/cards2': {
     view: 'static/cards2'
+  },
+  '/cards3': {
+    view: 'static/cards3'
+  },
+  '/cards4': {
+    view: 'static/cards4'
   }
 
   /***************************************************************************

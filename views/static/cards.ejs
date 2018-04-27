@@ -48,6 +48,42 @@
         },
         stop: function (event, ui) {
 
+        },
+        remove: function (event, ui) {
+          console.log('something from ', this.currentParentDiv, ' was removed');
+
+          var parent = this.currentParentDiv;
+          var newOrderOfList = parent.sortable("toArray");
+
+          var parent_id = parent.attr('id');
+          var column = parent_id.slice(8);
+
+          var Cards = []; //Variable to contain all cards
+          var row = 1;
+          $.each(newOrderOfList, function (i, item) {
+            var newItem = {
+              id: item,
+              row: row,
+              column: column
+            }
+            Cards.push(newItem);
+            row++;
+          });
+
+          //Updating database with new position of card
+          $.ajax({
+            url: '/card/update',
+            type: "POST",
+            data: {
+              'Cards': Cards
+            },
+            success: function (data) {
+              // REFRESH THE BOARD
+            }
+          });
+        },
+        start: function (event, ui) {
+          this.currentParentDiv = ui.item.parent();
         }
       });
       $("div[id^='sort-me']").sortable('refresh');
@@ -92,10 +128,8 @@
 
     var socket = io.connect();
     socket.on('connect', function () {
-      console.log('connected Jquery Cards');
     });
     io.socket.on('card', function (msg) {
-      console.log('fetching data');
       fetchData();
     });
   });
@@ -125,7 +159,8 @@
     min-height: 30px;
     margin: 10px;
     padding: 10px;
-    width: auto;
+    min-width: 220px;
+    /* width: auto; */
     vertical-align: top;
     display: inline-block;
   }

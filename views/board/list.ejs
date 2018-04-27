@@ -1,0 +1,29 @@
+<div class="container">
+  <h1 class="display-4">Boards</h1>
+
+  <a href="/board/new" class="btn btn-primary">New Board</a> <br> <br>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Columns</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% boards.forEach(function(board){ %>
+        <tr>
+          <td>
+            <%=board.id%>
+          </td>
+          <td>
+            <%=board.columns%>
+          </td>
+          <td>
+            <a href="/board/show/<%=board.id%>" class="btn btn-primary">Show</a>
+          </td>
+        </tr>
+        <% }) %>
+    </tbody>
+  </table>
+</div>

@@ -31,10 +31,9 @@ module.exports = {
       required: true
     },
 
-    toJSON: function () {
-      var obj = this.toObject();
-      delete obj._csrf;
-      return obj
+    //Connection to which board the card belongs
+    board: {
+      model: 'board'
     }
 
   },

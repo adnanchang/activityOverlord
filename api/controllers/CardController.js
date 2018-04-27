@@ -7,7 +7,9 @@
 
 module.exports = {
   new: function(req, res) {
-    res.view();
+    res.view({
+      boardID: req.param('id')
+    });
   },
 
   create: function(req, res, next) {
@@ -45,25 +47,32 @@ module.exports = {
   update: function(req, res, next) {
     var Cards = req.param("Cards");
     console.log(Cards);
-    Cards.forEach(element => {
-      Card.update(
-        element.id,
-        {
-          column: element.column,
-          row: element.row
-        },
-        function cardUpdated(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
-    });
 
-    Card.publishUpdate(Cards[0].id, {
-      verb: "updated"
-    }, req);
-    res.send(200);
+    if (Cards != null) {
+      Cards.forEach(element => {
+        Card.update(
+          element.id,
+          {
+            column: element.column,
+            row: element.row
+          },
+          function cardUpdated(err) {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+      });
+
+      Card.publishUpdate(
+        Cards[0].id,
+        {
+          verb: "updated"
+        },
+        req
+      );
+      res.send(200);
+    }
   },
 
   subscribe: function(req, res, next) {

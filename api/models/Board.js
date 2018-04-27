@@ -9,7 +9,15 @@ module.exports = {
 
   attributes: {
 
+    columns: {
+      type: 'int'
+    },
 
+    //The card collection in the board
+    cards: {
+      collection: 'card',
+      via: 'board'
+    }
 
   },
 
