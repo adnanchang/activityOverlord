@@ -36,50 +36,51 @@
 </script>
 
 <!-- <div style="margin: 30px;"> -->
-<div class="container">
-  <div class="row">
-    <div class="sort-me-header">
-      <div class="sticky">
+<div class="container" style="display: table;">
+  <div class="row" style="display: table-row; ">
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: orange;">
         <b>Card Header</b> Put any text in here.
       </div>
     </div>
-    <div class="sort-me-header">
-      <div class="sticky">
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: orange;">
         <b>Card Header</b> Put any text in here.
       </div>
     </div>
-    <div class="sort-me-header">
-      <div class="sticky">
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: orange;">
         <b>Card Header</b> Put any text in here.
       </div>
     </div>
-    <div class="sort-me-header">
-      <div class="sticky">
-        <b>Card Header</b> Put any text in here.
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="sort-me-header">
-      <div class="sticky">
-        <b>Card Header</b> Put any text in here.
-      </div>
-    </div>
-    <div class="sort-me-header">
-      <div class="sticky">
-        <b>Card Header</b> Put any text in here.
-      </div>
-    </div>
-    <div class="sort-me-header">
-    </div>
-    <div class="sort-me-header">
-      <div class="sticky">
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: orange;">
         <b>Card Header</b> Put any text in here.
       </div>
     </div>
   </div>
-  <div class="row">
-    <div class="sort-me-alpha">
+  <div class="row" style="display: table-row;">
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: pink;">
+        <b>Card Header</b> Put any text in here.
+      </div>
+    </div>
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: pink;">
+        <b>Card Header</b> Put any text in here.
+      </div>
+    </div>
+    <div class="sort-me-header" style="display: table-cell;">
+    </div>
+    <div class="sort-me-header" style="display: table-cell;">
+      <div class="sticky" style="background-color: pink;">
+        <b>Card Header</b> Put any text in here.
+      </div>
+    </div>
+  </div>
+  <hr>
+  <div class="row" style="display: table-row;">
+    <div class="sort-me-alpha" style="display: table-cell;">
       <div class="sticky">
         <b>Card 1</b> Put any text in here.
       </div>
@@ -87,12 +88,12 @@
         <b>Card 2</b> Put any text in here.
       </div>
     </div>
-    <div class="sort-me-beta">
+    <div class="sort-me-beta" style="display: table-cell;">
       <div class="sticky">
         <b>Card n</b> Put any text in here.
       </div>
     </div>
-    <div class="sort-me-gamma">
+    <div class="sort-me-gamma" style="display: table-cell;">
       <div class="sticky">
         <b>Card 3</b> Put any text in here.
       </div>
@@ -135,9 +136,10 @@
   }
 
   .sort-me-header {
-    background-color: #3498db;
-    margin: 10px;
-    padding: 10px;
+    /* background-color: #ADD8E6; */
+    background-color: white;
+    /* margin: 10px; */
+    /* padding: 10px; */
     width: 250px;
     min-height: 200px;
     height: auto;
@@ -147,9 +149,10 @@
 
   .sort-me-alpha {
     /* background-color: #00274c; */
-    background-color: #3498db;
-    margin: 10px;
-    padding: 10px;
+    /* background-color: #ADD8E6; */
+    background-color: white;
+    /* margin: 10px; */
+    /* padding: 10px; */
     width: 250px;
     min-height: 600px;
     height: auto;
@@ -159,9 +162,10 @@
 
   .sort-me-gamma {
     /* background-color: #00274c; */
-    background-color: #3498db;
-    margin: 10px;
-    padding: 10px;
+    /* background-color: #ADD8E6; */
+    background-color: white;
+    /* margin: 10px; */
+    /* padding: 10px; */
     width: 250px;
     height: auto;
     min-height: 600px;
@@ -171,9 +175,10 @@
 
   .sort-me-beta {
     /* background-color: #00274c; */
-    background-color: #3498db;
-    margin: 10px;
-    padding: 10px;
+    /* background-color: #ADD8E6; */
+    background-color: white;
+    /* margin: 10px; */
+    /* padding: 10px; */
     width: 250px;
     height: auto;
     min-height: 600px;
@@ -214,29 +219,8 @@
     box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.3);
   }
 
-  .sticky:before,
-  .sticky:after {
-    content: "";
-    display: block;
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    top: 0;
-    right: 0;
-  }
-
-  .sticky:before {
-    border-top: solid 8px #fff;
-    border-right: solid 8px #fff;
-    border-left: solid 8px transparent;
-    border-bottom: solid 8px transparent;
-  }
-
-  .sticky:after {
-    border-bottom: solid 8px #dddd33;
-    border-left: solid 8px #dddd33;
-    border-right: solid 8px transparent;
-    border-top: solid 8px transparent;
+  .sticky header {
+    background: purple;
   }
 
   .ui-helper {

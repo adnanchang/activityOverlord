@@ -34,6 +34,10 @@ module.exports = {
     //Connection to which board the card belongs
     board: {
       model: 'board'
+    },
+
+    cardType: {
+      model: 'cardType'
     }
 
   },
