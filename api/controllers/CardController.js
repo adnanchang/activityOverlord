@@ -7,8 +7,20 @@
 
 module.exports = {
   new: function(req, res) {
-    res.view({
-      boardID: req.param('id')
+    CardType.find({}).exec(function cardTypes(err, types) {
+      if (err) console.log(err);
+
+      Iteration.findOne({ board: req.param("id") }).exec(
+        function iterationFound(err, iteration) {
+          if (err) console.log(err);
+
+          res.view({
+            boardID: req.param("id"),
+            cardTypes: types,
+            iteration: iteration
+          });
+        }
+      );
     });
   },
 
@@ -22,7 +34,7 @@ module.exports = {
 
         return res.redirect("/card/new");
       }
-
+      console.log("card created");
       res.json(card);
     });
   },
@@ -46,7 +58,6 @@ module.exports = {
 
   update: function(req, res, next) {
     var Cards = req.param("Cards");
-    console.log(Cards);
 
     if (Cards != null) {
       Cards.forEach(element => {
@@ -54,7 +65,8 @@ module.exports = {
           element.id,
           {
             column: element.column,
-            row: element.row
+            row: element.row,
+            cardType: element.cardType
           },
           function cardUpdated(err) {
             if (err) {
@@ -82,5 +94,64 @@ module.exports = {
       Card.subscribe(req.socket, cards);
       res.send(200, cards);
     });
+  },
+
+  headers: function(req, res, next) {
+    Card.find({
+      iteration: req.param("id"),
+      cardType: "Header"
+    })
+      .sort({
+        row: 1,
+        column: 1
+      })
+      .exec(function(err, cards) {
+        if (err) next(err);
+
+        res.json(cards);
+      });
+  },
+
+  stories: function(req, res, next) {
+    Card.find({
+      iteration: req.param("id"),
+      cardType: "Story"
+    })
+      .sort({
+        column: 1,
+        row: 1
+      })
+      .exec(function(err, cards) {
+        if (err) next(err);
+
+        res.json(cards);
+      });
+  },
+
+  delete: function(req, res, next) {
+    console.log(req.params.all());
+    Card.destroy({
+      id: req.param("id")
+    }).exec(function(err) {
+      if (err) next(err);
+
+      console.log("destroyed");
+      res.send(200);
+    });
+  },
+
+  edit: function(req, res, next) {
+    Card.update(
+      {
+        id: req.param("id")
+      },
+      {
+        title: req.param('title'),
+        description: req.param('description'),
+      }).exec(function(err) {
+        if (err) next(err);
+
+        return res.send(200);
+      })
   }
 };

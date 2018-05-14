@@ -31,13 +31,17 @@ module.exports = {
       required: true
     },
 
-    //Connection to which board the card belongs
-    board: {
-      model: 'board'
+    cardType: {
+      type: 'string'
     },
 
-    cardType: {
-      model: 'cardType'
+    //Connection to which iteration the card belongs to
+    iteration: {
+      model: 'iteration'
+    },
+
+    draft: {
+      model: 'draft'
     }
 
   },

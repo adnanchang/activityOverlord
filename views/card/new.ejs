@@ -2,17 +2,6 @@
     <form action="/card/create" id="cardForm" method="POST" class="form-signin">
         <fieldset>
             <legend>Create a Card</legend>
-
-            <% if(flash && flash.err) { %>
-                <ul class="alert alert-success">
-                    <% Object.keys(flash.err).forEach(function(error) { %>
-                        <li>
-                            <%- JSON.stringify(flash.err[error]) %>
-                        </li>
-                        <% }) %>
-                </ul>
-                <% } %>
-
                     <div class="form-group">
                         <label for="title">Card Title</label>
                         <input type="text" class="form-control" name="title" placeholder="Enter Card Title">
@@ -29,7 +18,15 @@
                         <label for="row">Card Row</label>
                         <input type="number" class="form-control" name="row" placeholder="Enter Row">
                     </div>
-                    <input type="hidden" name="board" value="<%=boardID%>">
+                    <div class="form-group">
+                        <label for="row">Card Type</label>
+                        <select class="form-control" name="cardType" id="cardType">
+                            <% cardTypes.forEach(function(cardType) { %>
+                                <option value="<%= cardType.type %>"><%= cardType.type %></option>
+                                <% }) %>
+                        </select>
+                    </div>
+                    <input type="hidden" value="<%= iteration.id%>" name="iteration" >
                     <button type="submit" class="btn btn-primary">Submit</button>
         </fieldset>
     </form>

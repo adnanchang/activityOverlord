@@ -1,12 +1,14 @@
 <div class="container">
   <h1 class="display-4">Boards</h1>
 
-  <a href="/board/new" class="btn btn-primary">New Board</a> <br> <br>
+  <form action="/board/create" method="POST" >
+    <input type="submit" value="Create" class="btn btn-primary">
+  </form> <br>
   <table class="table table-striped">
     <thead>
       <tr>
         <th>#</th>
-        <th>Columns</th>
+        <th>Iterations</th>
         <th></th>
       </tr>
     </thead>
@@ -17,10 +19,10 @@
             <%=board.id%>
           </td>
           <td>
-            <%=board.columns%>
+            <%=board.iterations.length%>
           </td>
           <td>
-            <a href="/board/show/<%=board.id%>" class="btn btn-primary">Show</a>
+            <a href="/board/show?id=<%=board.id%>" class="btn btn-primary">Show</a>
           </td>
         </tr>
         <% }) %>

@@ -8,17 +8,17 @@
 module.exports = {
 
   attributes: {
-
-    columns: {
-      type: 'int'
+    //A board consists of multiple iterations
+    iterations: {
+      collection: 'iteration',
+      via: 'board'
     },
 
-    //The card collection in the board
-    cards: {
-      collection: 'card',
+    //A board consists of a draft
+    drafts: {
+      collection: 'draft',
       via: 'board'
     }
-
   },
 
 };
