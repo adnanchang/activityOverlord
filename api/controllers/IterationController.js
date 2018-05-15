@@ -68,6 +68,19 @@ module.exports = {
       if (err) next(err);
 
       if (iteration.headerColumns > 5) {
+        Card.find({
+          iteration: iteration.id,
+          column: iteration.headerColumns
+        }).exec(function(err, cards){
+          cards.forEach(card => {
+            console.log(card);
+            card.cardType = "Draft";
+            card.save(function(err) {
+              if (err) next(err);
+            });
+          });
+        })
+
         iteration.headerColumns--;
         iteration.storyColumns--;
 
@@ -93,6 +106,7 @@ module.exports = {
           row: iteration.headerRows
         }).exec(function(err, cards) {
           cards.forEach(card => {
+            console.log(card);
             card.cardType = "Draft";
             card.save(function(err) {
               if (err) next(err);
