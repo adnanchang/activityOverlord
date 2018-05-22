@@ -139,7 +139,7 @@
                     $("#cardContainer").empty();
                     $.each(iterations, function (i, iteration) {
                         //Render a new div for current Iteration
-                        $("#cardContainer").append('<div id="iteration-' + iteration.id + '" class="container" style="overflow-x: auto;white-space: nowrap;">' +
+                        $("#cardContainer").append('<div id="iteration-' + iteration.id + '" class="iteration">' +
                             '<h5>Iteration - ' + iteration.id + '</h5>' +
                             '</div>')
                         //Generating the base header rows and story columns
@@ -247,6 +247,25 @@
             })
         }
 
+        function fetchDrafts() {
+            $.ajax({
+                url: '/draft/getDraft/' + $.urlParam('id'),
+                success: function (draft) {
+                    $.each(draft.cards, function (i, card) {
+                        $("#draftContainer").append(
+                            '<div id="' + card.id + '" class="sticky" sort="' + card.row + '" style="background-color: orange; float: left;">' +
+                            '<button type="button" class="close" aria-label="Close">' +
+                            '<span aria-hidden="true">&times;</span>' +
+                            '</button>' +
+                            '<b>' + card.title + '</b> <br>' +
+                            card.description +
+                            '</div>'
+                        );
+                    });
+                }
+            })
+        }
+
         function getIterations() {
             var $dropdown = $("#iterations");
             $.ajax({
@@ -263,6 +282,7 @@
         //Render Board
         fetchData();
         getIterations();
+        fetchDrafts();
 
         var socket = io.connect();
         socket.on('connect', function () {
@@ -361,6 +381,9 @@
                 }
             });
         });
+
+        $("#draftContainer").sortable();
+        $("#draftContainer").disableSelection();
     });
 
 
@@ -369,10 +392,20 @@
 
 <div class="container">
     <div class="row">
-        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#demo">Simple collapsible</button>
-        <div id="demo" class="collapse">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#draftContainer">Simple collapsible</button>
+        <div id="draftContainer" class="collapse" style="list-style-type: none;">
+            <div class="sticky" style="background-color: orange; float: left;">
+                <b>Card Header</b>
+                <br> Put any text in here.
+            </div>
+            <div class="sticky" style="background-color: orange; float: left;">
+                <b>Card Header</b>
+                <br> Put any text in here.
+            </div>
+            <div class="sticky" style="background-color: orange; float: left;">
+                <b>Card Header</b>
+                <br> Put any text in here.
+            </div>
         </div>
     </div>
     <div class="row">
@@ -424,7 +457,7 @@
     </div>
 </div>
 
-<div id="cardContainer" class="container">
+<div id="cardContainer">
 
 </div>
 
@@ -461,32 +494,50 @@
 </div>
 
 <style>
+    #cardContainer {
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .iteration {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-left: 15px;
+        padding-right: 15px;
+        padding-bottom: 10px;
+    }
+
     .sort-me {
         /* background-color: #3498db; */
-        width: 250px;
+        width: 200px;
         min-height: 600px;
         vertical-align: top;
         display: inline-block;
-        border-style: solid;
+        border-bottom: solid;
+        border-right: solid;
         border-width: thin;
     }
 
     .sort-me-header {
         /* background-color: #ADD8E6; */
-        width: 250px;
-        min-height: 200px;
+        width: 200px;
+        min-height: 170px;
         height: auto;
         vertical-align: top;
         display: inline-block;
-        border-style: solid;
+        border-bottom: solid;
+        border-right: solid;
         border-width: thin;
     }
 
     .testclass {
         background-color: gray;
         border: 2px solid gray;
-        width: 200px;
-        min-height: 150px;
+        width: 180px;
+        min-height: 140px;
         margin: 10px 10px 10px;
         padding: 10px;
     }
@@ -494,8 +545,8 @@
     .sticky {
         right: 0;
         z-index: 150;
-        width: 200px;
-        min-height: 150px;
+        width: 180px;
+        min-height: 140px;
         margin: 10px 10px 10px;
         padding: 10px;
         font-size: 14px;

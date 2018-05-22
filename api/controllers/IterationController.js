@@ -6,43 +6,43 @@
  */
 
 module.exports = {
-  allIterations: function(req, res, next) {
-    Iteration.find({ board: req.param("id") }).exec(function(err, iterations) {
+  allIterations: function (req, res, next) {
+    Iteration.find({ board: req.param("id") }).exec(function (err, iterations) {
       if (err) console.log(err);
 
       res.json(iterations);
     });
   },
 
-  delete: function(req, res, next) {
-    Iteration.destroy({ id: req.param("id") }).exec(function(err) {
+  delete: function (req, res, next) {
+    Iteration.destroy({ id: req.param("id") }).exec(function (err) {
       if (err) next(err);
 
       return res.send(200);
     });
   },
 
-  create: function(req, res, next) {
+  create: function (req, res, next) {
     console.log(req.params.all());
     Iteration.create({
       headerRows: 1,
       headerColumns: 5,
       storyColumns: 5,
       board: req.param("id")
-    }).exec(function(err, iteration) {
+    }).exec(function (err, iteration) {
       if (err) next(err);
 
       return res.send(200);
     });
   },
 
-  addColumn: function(req, res, next) {
-    Iteration.findOne({ id: req.param("id") }).exec(function(err, iteration) {
+  addColumn: function (req, res, next) {
+    Iteration.findOne({ id: req.param("id") }).exec(function (err, iteration) {
       if (err) next(err);
 
       iteration.headerColumns++;
       iteration.storyColumns++;
-      iteration.save(function(err) {
+      iteration.save(function (err) {
         if (err) next(err);
       });
 
@@ -50,12 +50,12 @@ module.exports = {
     });
   },
 
-  addHeader: function(req, res, next) {
-    Iteration.findOne({ id: req.param("id") }).exec(function(err, iteration) {
+  addHeader: function (req, res, next) {
+    Iteration.findOne({ id: req.param("id") }).exec(function (err, iteration) {
       if (err) next(err);
 
       iteration.headerRows++;
-      iteration.save(function(err) {
+      iteration.save(function (err) {
         if (err) next(err);
       });
 
@@ -63,28 +63,35 @@ module.exports = {
     });
   },
 
-  removeColumn: function(req, res, next) {
-    Iteration.findOne({ id: req.param("id") }).exec(function(err, iteration) {
+  removeColumn: function (req, res, next) {
+    Iteration.findOne({ id: req.param("id") }).exec(function (err, iteration) {
       if (err) next(err);
 
       if (iteration.headerColumns > 5) {
         Card.find({
           iteration: iteration.id,
           column: iteration.headerColumns
-        }).exec(function(err, cards){
+        }).exec(function (err, cards) {
           cards.forEach(card => {
             console.log(card);
             card.cardType = "Draft";
-            card.save(function(err) {
-              if (err) next(err);
+            card.iteration = null;
+            console.log(iteration);
+            Draft.findOne({
+              board: iteration.board
+            }).exec(function (err, draft) {
+              card.draft = draft.id;
+              card.save(function (err) {
+                if (err) next(err);
+              });
             });
           });
-        })
+        });
 
         iteration.headerColumns--;
         iteration.storyColumns--;
 
-        iteration.save(function(err) {
+        iteration.save(function (err) {
           if (err) next(err);
         });
 
@@ -95,8 +102,8 @@ module.exports = {
     });
   },
 
-  removeHeader: function(req, res, next) {
-    Iteration.findOne({ id: req.param("id") }).exec(function(err, iteration) {
+  removeHeader: function (req, res, next) {
+    Iteration.findOne({ id: req.param("id") }).exec(function (err, iteration) {
       if (err) next(err);
 
       if (iteration.headerRows > 1) {
@@ -104,17 +111,17 @@ module.exports = {
           iteration: iteration.id,
           cardType: "Header",
           row: iteration.headerRows
-        }).exec(function(err, cards) {
+        }).exec(function (err, cards) {
           cards.forEach(card => {
             console.log(card);
             card.cardType = "Draft";
-            card.save(function(err) {
+            card.save(function (err) {
               if (err) next(err);
             });
           });
 
           iteration.headerRows--;
-          iteration.save(function(err) {
+          iteration.save(function (err) {
             if (err) next(err);
           });
 
