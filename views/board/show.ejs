@@ -9,13 +9,18 @@
                 return decodeURI(results[1]) || 0;
             }
         }
+
+        function makeDraft(ui) {
+
+        }
+
         function updateCards(ui, cardType) {
             //Getting the parent DIV
-            console.log('Updating for ' + cardType);
+            // console.log('Updating for ' + cardType);
             var isNew = false;
             var parent = $(ui.item).parent();
-            console.log(parent);
-            console.log(parent.parent().parent());
+            // console.log(parent);
+            // console.log(parent.parent().parent());
             var iteration_id = parent.parent().parent().attr('id').slice(10);
             var newOrderOfList = parent.sortable("toArray");
 
@@ -37,6 +42,7 @@
             var Cards = []; //Variable to contain all cards
             $.each(newOrderOfList, function (i, item) {
                 var newItem;
+                console.log(item);
                 if (item == '') {
                     //Create new card since there's a new card in the list
                     $.ajax({
@@ -55,7 +61,8 @@
                                 id: data.id,
                                 row: row,
                                 column: column,
-                                cardType: cardType
+                                cardType: cardType,
+                                iteration: iteration_id
                             }
                             isNew = true;
                         }
@@ -66,7 +73,8 @@
                         id: item,
                         row: row,
                         column: column,
-                        cardType: cardType
+                        cardType: cardType,
+                        iteration: iteration_id
                     }
                 }
                 console.log(newItem);
@@ -98,25 +106,21 @@
             $("div[id^='sort-header']").sortable({
                 placeholder: "testclass",
                 forcePlaceholderSize: true,
-                connectWith: "div[id^='sort-me'], div[id^='sort-header']",
+                connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
                 receive: function (event, ui) {
                     var $list = $(this);
 
+                    console.log(ui.sender);
                     if ($list.children().length > 1) {
                         $(ui.sender).sortable('cancel');
+                    } else {
+                        updateCards(ui, 'Header');
                     }
-                },
-                update: function (event, ui) {
-                    //In order to update database
-                    //the whole list needs to be updated
-                    //Because moving one item updates positions of all elements
-
-                    updateCards(ui, 'Header');
                 }
             });
 
             $("div[id^='sort-me']").sortable({
-                connectWith: "div[id^='sort-me'], div[id^='sort-header']",
+                connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
                 placeholder: "testclass",
                 forcePlaceholderSize: true,
                 update: function (event, ui) {
@@ -127,6 +131,27 @@
                     updateCards(ui, 'Story');
                 }
             });
+
+            $("#draftContainer").sortable({
+                connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
+                placeholder: "testclass",
+                forcePlaceholderSize: true,
+                receive: function (event, ui) {
+                    console.log($('#draftID').val());
+                    $.ajax({
+                        url: '/card/makeDraft',
+                        data: {
+                            id: ui.item.attr('id'),
+                            draft: $('#draftID').val()
+                        },
+                        success: function (data) {
+                            fetchData();
+                            fetchDrafts();
+                        }
+                    });
+                }
+            });
+            $("#draftContainer").disableSelection();
 
             $("div[id^='sort-me']").sortable('refresh');
         }
@@ -149,10 +174,18 @@
                             $('#iteration-' + iteration.id).append(
                                 '<div id="header-row-' + i + '" class="row" style="display: -webkit-box;"></div>'
                             );
+
                             for (var j = 1; j <= iteration.headerColumns; j++) {
-                                $('#header-row-' + i).append(
-                                    '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header">'
-                                );
+                                if (i == 1) {
+                                    $('#header-row-' + i).append(
+                                        '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header" style="border-top:solid gray; border-width: thin;">'
+                                    );
+                                } else {
+                                    $('#header-row-' + i).append(
+                                        '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header">'
+                                    );
+                                }
+
                             }
                             i++;
                         }
@@ -248,6 +281,7 @@
         }
 
         function fetchDrafts() {
+            $('#draftContainer').empty();
             $.ajax({
                 url: '/draft/getDraft/' + $.urlParam('id'),
                 success: function (draft) {
@@ -262,6 +296,9 @@
                             '</div>'
                         );
                     });
+                    $('#draftContainer').append(
+                        '<input id="draftID" type="hidden" value="' + draft.id + '" />'
+                    );
                 }
             })
         }
@@ -271,7 +308,7 @@
             $.ajax({
                 url: '/iteration/allIterations/' + $.urlParam('id'),
                 success: function (data) {
-                    console.log(data);
+                    // console.log(data);
                     $.each(data, function (i, iteration) {
                         $dropdown.append($("<option />").val(iteration.id).text('Iteration - ' + iteration.id));
                     });
@@ -284,12 +321,12 @@
         getIterations();
         fetchDrafts();
 
-        var socket = io.connect();
-        socket.on('connect', function () {
-        });
-        io.socket.on('card', function (msg) {
-            fetchData();
-        });
+        // var socket = io.connect();
+        // socket.on('connect', function () {
+        // });
+        // io.socket.on('card', function (msg) {
+        //     fetchData();
+        // });
 
         $("#new").draggable({
             connectToSortable: "div[id^='sort-me'], div[id^='sort-header']",
@@ -382,8 +419,7 @@
             });
         });
 
-        $("#draftContainer").sortable();
-        $("#draftContainer").disableSelection();
+
     });
 
 
@@ -516,8 +552,8 @@
         min-height: 600px;
         vertical-align: top;
         display: inline-block;
-        border-bottom: solid;
-        border-right: solid;
+        border-bottom: solid gray;
+        border-right: solid gray;
         border-width: thin;
     }
 
@@ -528,8 +564,8 @@
         height: auto;
         vertical-align: top;
         display: inline-block;
-        border-bottom: solid;
-        border-right: solid;
+        border-bottom: solid gray;
+        border-right: solid gray;
         border-width: thin;
     }
 
