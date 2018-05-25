@@ -115,8 +115,14 @@ module.exports = {
           cards.forEach(card => {
             console.log(card);
             card.cardType = "Draft";
-            card.save(function (err) {
-              if (err) next(err);
+            card.iteration = null;
+            Draft.findOne({
+              board: iteration.board
+            }).exec(function (err, draft) {
+              card.draft = draft.id;
+              card.save(function (err) {
+                if (err) next(err);
+              });
             });
           });
 

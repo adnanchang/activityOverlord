@@ -1,496 +1,512 @@
 <script>
-    $(document).ready(function () {
-        $.urlParam = function (name) {
-            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-            if (results == null) {
-                return null;
+  $(document).ready(function () {
+    $.urlParam = function (name) {
+      var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      if (results == null) {
+        return null;
+      }
+      else {
+        return decodeURI(results[1]) || 0;
+      }
+    }
+
+    function makeDraft(ui) {
+
+    }
+
+    function updateCards(ui, cardType, isDraft) {
+      //Getting the parent DIV
+
+      var isNew = false;
+      var parent = $(ui.item).parent();
+      var iteration_id = parent.parent().parent().attr('id').slice(10);
+      var newOrderOfList = parent.sortable("toArray");
+
+      var parent_id = $(ui.item).parent().attr('id');
+      var column;
+      var row;
+      if (cardType == "Header") {
+        column = parent_id.slice(14);
+        row = parent_id.slice(12);
+        row = row.slice(0, -2);
+      } else {
+        column = parent_id.slice(8);
+        row = 1;
+      }
+
+      //converting into integer if not done
+      column = parseInt(column);
+      row = parseInt(row);
+      var Cards = []; //Variable to contain all cards
+      $.each(newOrderOfList, function (i, item) {
+        var newItem;
+        console.log(item);
+        if (item == '') {
+          //Create new card since there's a new card in the list
+          $.ajax({
+            url: '/card/create',
+            data: {
+              title: 'A new title',
+              description: 'A new description',
+              row: row,
+              column: column,
+              cardType: cardType,
+              iteration: iteration_id
+            },
+            async: false,
+            success: function (data) {
+              newItem = {
+                id: data.id,
+                row: row,
+                column: column,
+                cardType: cardType,
+                iteration: iteration_id
+              }
+              isNew = true;
             }
-            else {
-                return decodeURI(results[1]) || 0;
-            }
+          });
+
+        } else {
+          newItem = {
+            id: item,
+            row: row,
+            column: column,
+            cardType: cardType,
+            iteration: iteration_id
+          }
         }
+        console.log(newItem);
+        Cards.push(newItem);
+        row++;
+      });
 
-        function makeDraft(ui) {
-
+      //Updating database with new position of card
+      $.ajax({
+        url: '/card/update',
+        type: "POST",
+        data: {
+          'Cards': Cards
+        },
+        success: function (data) {
+          if (isNew) {
+            console.log('YEAH DUUDE');
+            fetchData();
+          }
+          if (isDraft) {
+            console.log('Received a draft card! Re-rendering board....');
+            fetchData();
+            fetchDrafts();
+          }
         }
+      });
+    }
 
-        function updateCards(ui, cardType) {
-            //Getting the parent DIV
-            // console.log('Updating for ' + cardType);
-            var isNew = false;
-            var parent = $(ui.item).parent();
-            // console.log(parent);
-            // console.log(parent.parent().parent());
-            var iteration_id = parent.parent().parent().attr('id').slice(10);
-            var newOrderOfList = parent.sortable("toArray");
+    function newCard(ui, cardType) {
 
-            var parent_id = $(ui.item).parent().attr('id');
-            var column;
-            var row;
-            if (cardType == "Header") {
-                column = parent_id.slice(14);
-                row = parent_id.slice(12);
-                row = row.slice(0, -2);
+    }
+
+    function makeSortable() {
+      $("div[id^='sort-header']").sortable({
+        placeholder: "testclass",
+        forcePlaceholderSize: true,
+        connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
+        receive: function (event, ui) {
+          var $list = $(this);
+
+          if ($list.children().length > 1) {
+            $(ui.sender).sortable('cancel');
+          } else {
+            if (ui.sender != null) {
+              if (ui.sender.attr('id') == 'draftContainer') {
+                updateCards(ui, 'Header', true);
+              }
             } else {
-                column = parent_id.slice(8);
-                row = 1;
+              updateCards(ui, 'Header', false);
+            }
+          }
+        }
+      });
+
+      $("div[id^='sort-me']").sortable({
+        connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
+        placeholder: "testclass",
+        forcePlaceholderSize: true,
+        update: function (event, ui) {
+          //In order to update database
+          //the whole list needs to be updated
+          //Because moving one item updates positions of all elements
+          console.log('HERE');
+          if (ui.sender != null) {
+            if (ui.sender.attr('id') == 'draftContainer') {
+              updateCards(ui, 'Story', true);
+            }
+          } else {
+            updateCards(ui, 'Story', false);
+          }
+
+
+        }
+      });
+
+      $("#draftContainer").sortable({
+        connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
+        placeholder: "testclass",
+        forcePlaceholderSize: true,
+        receive: function (event, ui) {
+          console.log($('#draftID').val());
+          $.ajax({
+            url: '/card/makeDraft',
+            data: {
+              id: ui.item.attr('id'),
+              draft: $('#draftID').val()
+            },
+            success: function (data) {
+              fetchData();
+              fetchDrafts();
+            }
+          });
+        }
+      });
+      $("#draftContainer").disableSelection();
+
+      $("div[id^='sort-me']").sortable('refresh');
+    }
+
+    function fetchData() {
+      $.ajax({
+        url: '/iteration/alliterations/' + $.urlParam('id'),
+        success: function (iterations) {
+          //First of all we empty the DIV if there's anything there
+          $("#cardContainer").empty();
+          $.each(iterations, function (i, iteration) {
+            //Render a new div for current Iteration
+            $("#cardContainer").append('<div id="iteration-' + iteration.id + '" class="iteration">' +
+              '<h5>Iteration - ' + iteration.id + '</h5>' +
+              '</div>')
+            //Generating the base header rows and story columns
+            //Generating headers
+            var i = 1;
+            while (i <= iteration.headerRows) {
+              $('#iteration-' + iteration.id).append(
+                '<div id="header-row-' + i + '" class="row" style="display: -webkit-box;"></div>'
+              );
+
+              for (var j = 1; j <= iteration.headerColumns; j++) {
+                if (i == 1) {
+                  $('#header-row-' + i).append(
+                    '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header" style="border-top:solid gray; border-width: thin;"></div>'
+                  );
+                } else {
+                  $('#header-row-' + i).append(
+                    '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header"></div>'
+                  );
+                }
+
+              }
+              i++;
+            }
+            //Generating story
+            $('#iteration-' + iteration.id).append('<div id=story-' + iteration.id + ' class="row" style="display: -webkit-box;"> </div>');
+            for (i = 1; i <= iteration.storyColumns; i++) {
+              $('#story-' + iteration.id).append(
+                '<div id=\"sort-me-' + i + '\" class=\'sort-me\'> </div>'
+              );
             }
 
-            //converting into integer if not done
-            column = parseInt(column);
-            row = parseInt(row);
-            var Cards = []; //Variable to contain all cards
-            $.each(newOrderOfList, function (i, item) {
-                var newItem;
-                console.log(item);
-                if (item == '') {
-                    //Create new card since there's a new card in the list
-                    $.ajax({
-                        url: '/card/create',
-                        data: {
-                            title: 'A new title',
-                            description: 'A new description',
-                            row: row,
-                            column: column,
-                            cardType: cardType,
-                            iteration: iteration_id
-                        },
-                        async: false,
-                        success: function (data) {
-                            newItem = {
-                                id: data.id,
-                                row: row,
-                                column: column,
-                                cardType: cardType,
-                                iteration: iteration_id
-                            }
-                            isNew = true;
-                        }
-                    });
-
-                } else {
-                    newItem = {
-                        id: item,
-                        row: row,
-                        column: column,
-                        cardType: cardType,
-                        iteration: iteration_id
-                    }
-                }
-                console.log(newItem);
-                Cards.push(newItem);
-                row++;
-            });
-
-            //Updating database with new position of card
+            //Putting the cards inside the generated DIVs
             $.ajax({
-                url: '/card/update',
-                type: "POST",
-                data: {
-                    'Cards': Cards
-                },
-                success: function (data) {
-                    if (isNew) {
-                        console.log('YEAH DUUDE');
-                        fetchData();
-                    }
-                }
-            });
-        }
-
-        function newCard(ui, cardType) {
-
-        }
-
-        function makeSortable() {
-            $("div[id^='sort-header']").sortable({
-                placeholder: "testclass",
-                forcePlaceholderSize: true,
-                connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
-                receive: function (event, ui) {
-                    var $list = $(this);
-
-                    console.log(ui.sender);
-                    if ($list.children().length > 1) {
-                        $(ui.sender).sortable('cancel');
-                    } else {
-                        updateCards(ui, 'Header');
-                    }
-                }
+              url: '/card/headers/' + iteration.id,
+              async: false,
+              success: function (headerCards) {
+                $.each(headerCards, function (i, card) {
+                  $('#sort-header-' + card.row + '-' + card.column).append(
+                    '<div id="' + card.id + '" class="sticky" sort="' + card.column + '">' +
+                    '<button type="button" class="close" aria-label="Close">' +
+                    '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                    '<b>' + card.title + '</b> <br>' +
+                    card.description +
+                    '</div>'
+                  );
+                });
+              }
             });
 
-            $("div[id^='sort-me']").sortable({
-                connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
-                placeholder: "testclass",
-                forcePlaceholderSize: true,
-                update: function (event, ui) {
-                    //In order to update database
-                    //the whole list needs to be updated
-                    //Because moving one item updates positions of all elements
 
-                    updateCards(ui, 'Story');
-                }
-            });
-
-            $("#draftContainer").sortable({
-                connectWith: "div[id^='sort-me'], div[id^='sort-header'], div[id='draftContainer']",
-                placeholder: "testclass",
-                forcePlaceholderSize: true,
-                receive: function (event, ui) {
-                    console.log($('#draftID').val());
-                    $.ajax({
-                        url: '/card/makeDraft',
-                        data: {
-                            id: ui.item.attr('id'),
-                            draft: $('#draftID').val()
-                        },
-                        success: function (data) {
-                            fetchData();
-                            fetchDrafts();
-                        }
-                    });
-                }
-            });
-            $("#draftContainer").disableSelection();
-
-            $("div[id^='sort-me']").sortable('refresh');
-        }
-
-        function fetchData() {
+            //Getting the story cards and rendering them
             $.ajax({
-                url: '/iteration/alliterations/' + $.urlParam('id'),
-                success: function (iterations) {
-                    //First of all we empty the DIV if there's anything there
-                    $("#cardContainer").empty();
-                    $.each(iterations, function (i, iteration) {
-                        //Render a new div for current Iteration
-                        $("#cardContainer").append('<div id="iteration-' + iteration.id + '" class="iteration">' +
-                            '<h5>Iteration - ' + iteration.id + '</h5>' +
-                            '</div>')
-                        //Generating the base header rows and story columns
-                        //Generating headers
-                        var i = 1;
-                        while (i <= iteration.headerRows) {
-                            $('#iteration-' + iteration.id).append(
-                                '<div id="header-row-' + i + '" class="row" style="display: -webkit-box;"></div>'
-                            );
+              url: '/card/stories/' + iteration.id,
+              async: false,
+              success: function (storyCards) {
+                // $('#iteration-' + iteration.id).append('<div id=story-' + iteration.id + ' class="row"> </div>');
+                $.each(storyCards, function (i, card) {
+                  $("#sort-me-" + card.column).append(
+                    '<div id="' + card.id + '" class="sticky" sort="' + card.row + '">' +
+                    '<button type="button" class="close" aria-label="Close">' +
+                    '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                    '<b>' + card.title + '</b> <br>' +
+                    card.description +
+                    '</div>'
+                  );
 
-                            for (var j = 1; j <= iteration.headerColumns; j++) {
-                                if (i == 1) {
-                                    $('#header-row-' + i).append(
-                                        '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header" style="border-top:solid gray; border-width: thin;">'
-                                    );
-                                } else {
-                                    $('#header-row-' + i).append(
-                                        '<div id="sort-header-' + i + '-' + j + '" class="sort-me-header">'
-                                    );
-                                }
-
-                            }
-                            i++;
-                        }
-                        //Generating story
-                        $('#iteration-' + iteration.id).append('<div id=story-' + iteration.id + ' class="row" style="display: -webkit-box;"> </div>');
-                        for (i = 1; i <= iteration.storyColumns; i++) {
-                            $('#story-' + iteration.id).append(
-                                '<div id=\"sort-me-' + i + '\" class=\'sort-me\'> </div>'
-                            );
-                        }
-
-                        //Putting the cards inside the generated DIVs
-                        $.ajax({
-                            url: '/card/headers/' + iteration.id,
-                            async: false,
-                            success: function (headerCards) {
-                                $.each(headerCards, function (i, card) {
-                                    $('#sort-header-' + card.row + '-' + card.column).append(
-                                        '<div id="' + card.id + '" class="sticky" sort="' + card.column + '">' +
-                                        '<button type="button" class="close" aria-label="Close">' +
-                                        '<span aria-hidden="true">&times;</span>' +
-                                        '</button>' +
-                                        '<b>' + card.title + '</b> <br>' +
-                                        card.description +
-                                        '</div>'
-                                    );
-                                });
-                            }
-                        });
-
-
-                        //Getting the story cards and rendering them
-                        $.ajax({
-                            url: '/card/stories/' + iteration.id,
-                            async: false,
-                            success: function (storyCards) {
-                                // $('#iteration-' + iteration.id).append('<div id=story-' + iteration.id + ' class="row"> </div>');
-                                $.each(storyCards, function (i, card) {
-                                    $("#sort-me-" + card.column).append(
-                                        '<div id="' + card.id + '" class="sticky" sort="' + card.row + '">' +
-                                        '<button type="button" class="close" aria-label="Close">' +
-                                        '<span aria-hidden="true">&times;</span>' +
-                                        '</button>' +
-                                        '<b>' + card.title + '</b> <br>' +
-                                        card.description +
-                                        '</div>'
-                                    );
-
-                                });
-                            }
-                        });
-                    });
-                },
-                complete: function () {
-                    makeSortable();
-                    $('.close').click(function () {
-                        $.ajax({
-                            url: '/card/delete',
-                            data: {
-                                id: $(this).parent().attr('id')
-                            },
-                            async: false,
-                            success: function (data) {
-                                console.log('card deleted');
-                            }
-                        });
-                        $(this).parent().remove();
-                    });
-
-                    $('.sticky').dblclick(function (e) {
-                        e.preventDefault();
-                        var cardToEdit = $(this).attr('id');
-
-                        $.ajax({
-                            url: '/card/',
-                            data: {
-                                id: cardToEdit
-                            },
-                            success: function (card) {
-                                //Set the data in the form
-                                $("#editCardId").html(card.id);
-                                $('#editTitle').val(card.title);
-                                $('#editDescription').val(card.description);
-                            },
-                            complete: function () {
-                                $('#exampleModal').modal('toggle');
-                            }
-                        })
-
-                    })
-                }
-            })
-        }
-
-        function fetchDrafts() {
-            $('#draftContainer').empty();
-            $.ajax({
-                url: '/draft/getDraft/' + $.urlParam('id'),
-                success: function (draft) {
-                    $.each(draft.cards, function (i, card) {
-                        $("#draftContainer").append(
-                            '<div id="' + card.id + '" class="sticky" sort="' + card.row + '" style="background-color: orange; float: left;">' +
-                            '<button type="button" class="close" aria-label="Close">' +
-                            '<span aria-hidden="true">&times;</span>' +
-                            '</button>' +
-                            '<b>' + card.title + '</b> <br>' +
-                            card.description +
-                            '</div>'
-                        );
-                    });
-                    $('#draftContainer').append(
-                        '<input id="draftID" type="hidden" value="' + draft.id + '" />'
-                    );
-                }
-            })
-        }
-
-        function getIterations() {
-            var $dropdown = $("#iterations");
-            $.ajax({
-                url: '/iteration/allIterations/' + $.urlParam('id'),
-                success: function (data) {
-                    // console.log(data);
-                    $.each(data, function (i, iteration) {
-                        $dropdown.append($("<option />").val(iteration.id).text('Iteration - ' + iteration.id));
-                    });
-                }
-            })
-
-        }
-        //Render Board
-        fetchData();
-        getIterations();
-        fetchDrafts();
-
-        // var socket = io.connect();
-        // socket.on('connect', function () {
-        // });
-        // io.socket.on('card', function (msg) {
-        //     fetchData();
-        // });
-
-        $("#new").draggable({
-            connectToSortable: "div[id^='sort-me'], div[id^='sort-header']",
-            helper: "clone"
-        });
-
-        $('#exampleModal').on('shown.bs.modal', function () {
-        })
-
-        $('#newIteration').click(function () {
-            $.ajax({
-                url: '/iteration/create',
-                data: {
-                    id: $.urlParam('id')
-                },
-                success: function (data) {
-                    fetchData();
-                    getIterations();
-                }
+                });
+              }
             });
-        });
+          });
+        },
+        complete: function () {
+          makeSortable();
+          $('.close').click(function () {
+            $.ajax({
+              url: '/card/delete',
+              data: {
+                id: $(this).parent().attr('id')
+              },
+              async: false,
+              success: function (data) {
+                console.log('card deleted');
+              }
+            });
+            $(this).parent().remove();
+          });
 
-        $("#saveEdit").click(function (e) {
+          $('.sticky').dblclick(function (e) {
             e.preventDefault();
+            var cardToEdit = $(this).attr('id');
+
             $.ajax({
-                url: '/card/edit',
-                data: {
-                    id: $("#editCardId").html(),
-                    title: $('#editTitle').val(),
-                    description: $('#editDescription').val(),
-                },
-                success: function (data) {
-                    fetchData();
-                },
-                complete: function () {
-                    $('#exampleModal').modal('toggle');
-                }
+              url: '/card/',
+              data: {
+                id: cardToEdit
+              },
+              success: function (card) {
+                //Set the data in the form
+                $("#editCardId").html(card.id);
+                $('#editTitle').val(card.title);
+                $('#editDescription').val(card.description);
+              },
+              complete: function () {
+                $('#exampleModal').modal('toggle');
+              }
             })
-        });
 
-        $('#addColumn').click(function () {
-            $.ajax({
-                url: '/iteration/addColumn',
-                data: {
-                    id: $('#iterations').val()
-                },
-                success: function (data) {
-                    fetchData();
-                }
-            });
-        });
-        $('#addHeader').click(function () {
-            $.ajax({
-                url: '/iteration/addHeader',
-                data: {
-                    id: $('#iterations').val()
-                },
-                success: function (data) {
-                    fetchData();
-                }
-            });
-        });
-        $('#removeColumn').click(function () {
-            $.ajax({
-                url: '/iteration/removeColumn',
-                data: {
-                    id: $('#iterations').val()
-                },
-                success: function (data) {
-                    fetchData();
-                },
-                error: function (data) {
-                    console.log(data);
-                    alert(data.responseJSON.error);
-                }
-            });
-        });
-        $('#removeHeader').click(function () {
-            $.ajax({
-                url: '/iteration/removeHeader',
-                data: {
-                    id: $('#iterations').val()
-                },
-                success: function (data) {
-                    fetchData();
-                },
-                error: function (data) {
-                    alert(data.responseJSON.error);
-                }
-            });
-        });
+          })
+        }
+      })
+    }
 
+    function fetchDrafts() {
+      $('#draftContainer').empty();
+      $.ajax({
+        url: '/draft/getDraft/' + $.urlParam('id'),
+        success: function (draft) {
+          $.each(draft.cards, function (i, card) {
+            $("#draftContainer").append(
+              '<div id="' + card.id + '" class="sticky" sort="' + card.row + '" style="background-color: orange; float: left;">' +
+              '<button type="button" class="close" aria-label="Close">' +
+              '<span aria-hidden="true">&times;</span>' +
+              '</button>' +
+              '<b>' + card.title + '</b> <br>' +
+              card.description +
+              '</div>'
+            );
+          });
+          $('#draftContainer').append(
+            '<input id="draftID" type="hidden" value="' + draft.id + '" />'
+          );
+        }
+      })
+    }
 
+    function getIterations() {
+      var $dropdown = $("#iterations");
+      $.ajax({
+        url: '/iteration/allIterations/' + $.urlParam('id'),
+        success: function (data) {
+          // console.log(data);
+          $.each(data, function (i, iteration) {
+            $dropdown.append($("<option />").val(iteration.id).text('Iteration - ' + iteration.id));
+          });
+        }
+      })
+
+    }
+    //Render Board
+    fetchData();
+    getIterations();
+    fetchDrafts();
+
+    // var socket = io.connect();
+    // socket.on('connect', function () {
+    // });
+    // io.socket.on('card', function (msg) {
+    //     fetchData();
+    // });
+
+    $("#new").draggable({
+      connectToSortable: "div[id^='sort-me'], div[id^='sort-header']",
+      helper: "clone"
     });
+
+    $('#exampleModal').on('shown.bs.modal', function () {
+    })
+
+    $('#newIteration').click(function () {
+      $.ajax({
+        url: '/iteration/create',
+        data: {
+          id: $.urlParam('id')
+        },
+        success: function (data) {
+          fetchData();
+          getIterations();
+        }
+      });
+    });
+
+    $("#saveEdit").click(function (e) {
+      e.preventDefault();
+      $.ajax({
+        url: '/card/edit',
+        data: {
+          id: $("#editCardId").html(),
+          title: $('#editTitle').val(),
+          description: $('#editDescription').val(),
+        },
+        success: function (data) {
+          fetchData();
+        },
+        complete: function () {
+          $('#exampleModal').modal('toggle');
+        }
+      })
+    });
+
+    $('#addColumn').click(function () {
+      $.ajax({
+        url: '/iteration/addColumn',
+        data: {
+          id: $('#iterations').val()
+        },
+        success: function (data) {
+          fetchData();
+        }
+      });
+    });
+    $('#addHeader').click(function () {
+      $.ajax({
+        url: '/iteration/addHeader',
+        data: {
+          id: $('#iterations').val()
+        },
+        success: function (data) {
+          fetchData();
+        }
+      });
+    });
+    $('#removeColumn').click(function () {
+      $.ajax({
+        url: '/iteration/removeColumn',
+        data: {
+          id: $('#iterations').val()
+        },
+        success: function (data) {
+          fetchData();
+        },
+        error: function (data) {
+          console.log(data);
+          alert(data.responseJSON.error);
+        }
+      });
+    });
+    $('#removeHeader').click(function () {
+      $.ajax({
+        url: '/iteration/removeHeader',
+        data: {
+          id: $('#iterations').val()
+        },
+        success: function (data) {
+          fetchData();
+        },
+        error: function (data) {
+          alert(data.responseJSON.error);
+        }
+      });
+    });
+
+
+  });
 
 
 </script>
 
 
 <div class="container">
-    <div class="row">
-        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#draftContainer">Simple collapsible</button>
-        <div id="draftContainer" class="collapse" style="list-style-type: none;">
-            <div class="sticky" style="background-color: orange; float: left;">
-                <b>Card Header</b>
-                <br> Put any text in here.
-            </div>
-            <div class="sticky" style="background-color: orange; float: left;">
-                <b>Card Header</b>
-                <br> Put any text in here.
-            </div>
-            <div class="sticky" style="background-color: orange; float: left;">
-                <b>Card Header</b>
-                <br> Put any text in here.
-            </div>
-        </div>
+  <div class="row">
+    <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#draftContainer">Simple collapsible</button>
+    <div id="draftContainer" class="collapse" style="list-style-type: none;">
+      <div class="sticky" style="background-color: orange; float: left;">
+        <b>Card Header</b>
+        <br> Put any text in here.
+      </div>
+      <div class="sticky" style="background-color: orange; float: left;">
+        <b>Card Header</b>
+        <br> Put any text in here.
+      </div>
+      <div class="sticky" style="background-color: orange; float: left;">
+        <b>Card Header</b>
+        <br> Put any text in here.
+      </div>
     </div>
-    <div class="row">
-        <div class="bd-example">
-            <div class="btn-group">
-                <button type="button" id="newIteration" class="btn btn-primary">
-                    New Iteration
-                </button>
-            </div>
-            <div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Action
-                </button>
-                <div class="dropdown-menu">
-                    <div id="new" class="sticky" style="background-color: orange;">
-                        <b>Card Header</b>
-                        <br> Put any text in here.
-                    </div>
-                </div>
-            </div>
+  </div>
+  <div class="row">
+    <div class="bd-example">
+      <div class="btn-group">
+        <button type="button" id="newIteration" class="btn btn-primary">
+          New Iteration
+        </button>
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Action
+        </button>
+        <div class="dropdown-menu">
+          <div id="new" class="sticky" style="background-color: orange;">
+            <b>Card Header</b>
+            <br> Put any text in here.
+          </div>
         </div>
+      </div>
     </div>
-    <div class="row">
-        <div class="bd-example">
-            <div class="btn-group">
-                <select id="iterations" class="form-control"></select>
-            </div>
-            <div class="btn-group">
-                <button type="button" id="addColumn" class="btn btn-primary">
-                    Add Column
-                </button>
-            </div>
-            <div class="btn-group">
-                <button type="button" id="addHeader" class="btn btn-primary">
-                    Add Header
-                </button>
-            </div>
-            <div class="btn-group">
-                <button type="button" id="removeColumn" class="btn btn-danger">
-                    Remove Column
-                </button>
-            </div>
-            <div class="btn-group">
-                <button type="button" id="removeHeader" class="btn btn-danger">
-                    Remove Header
-                </button>
-            </div>
-        </div>
+  </div>
+  <div class="row">
+    <div class="bd-example">
+      <div class="btn-group">
+        <select id="iterations" class="form-control"></select>
+      </div>
+      <div class="btn-group">
+        <button type="button" id="addColumn" class="btn btn-primary">
+          Add Column
+        </button>
+      </div>
+      <div class="btn-group">
+        <button type="button" id="addHeader" class="btn btn-primary">
+          Add Header
+        </button>
+      </div>
+      <div class="btn-group">
+        <button type="button" id="removeColumn" class="btn btn-danger">
+          Remove Column
+        </button>
+      </div>
+      <div class="btn-group">
+        <button type="button" id="removeHeader" class="btn btn-danger">
+          Remove Header
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <div id="cardContainer">
@@ -498,104 +514,104 @@
 </div>
 
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Edit Card</h5>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Edit Card</h5>
+      </div>
+      <form>
+        <div class="modal-body">
+          <fieldset>
+            <legend>Editing Card
+              <span id="editCardId"></span>
+            </legend>
+            <div class="form-group">
+              <label for="title">Card Title</label>
+              <input type="text" class="form-control" id="editTitle" placeholder="Enter Card Title">
             </div>
-            <form>
-                <div class="modal-body">
-                    <fieldset>
-                        <legend>Editing Card
-                            <span id="editCardId"></span>
-                        </legend>
-                        <div class="form-group">
-                            <label for="title">Card Title</label>
-                            <input type="text" class="form-control" id="editTitle" placeholder="Enter Card Title">
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Card Description</label>
-                            <input type="text" class="form-control" id="editDescription" name="description" placeholder="Enter Card Description">
-                        </div>
-                    </fieldset>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" id="saveEdit" class="btn btn-primary">Save changes</button>
-                </div>
-            </form>
-
+            <div class="form-group">
+              <label for="description">Card Description</label>
+              <input type="text" class="form-control" id="editDescription" name="description" placeholder="Enter Card Description">
+            </div>
+          </fieldset>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" id="saveEdit" class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+
     </div>
+  </div>
 </div>
 
 <style>
-    #cardContainer {
-        width: 100%;
-        padding-right: 15px;
-        padding-left: 15px;
-        margin-right: 0;
-        margin-left: 0;
-    }
+  #cardContainer {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: 0;
+    margin-left: 0;
+  }
 
-    .iteration {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-left: 15px;
-        padding-right: 15px;
-        padding-bottom: 10px;
-    }
+  .iteration {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 10px;
+  }
 
-    .sort-me {
-        /* background-color: #3498db; */
-        width: 200px;
-        min-height: 600px;
-        vertical-align: top;
-        display: inline-block;
-        border-bottom: solid gray;
-        border-right: solid gray;
-        border-width: thin;
-    }
+  .sort-me {
+    /* background-color: #3498db; */
+    width: 200px;
+    min-height: 600px;
+    vertical-align: top;
+    display: inline-block;
+    border-bottom: solid gray;
+    border-right: solid gray;
+    border-width: thin;
+  }
 
-    .sort-me-header {
-        /* background-color: #ADD8E6; */
-        width: 200px;
-        min-height: 170px;
-        height: auto;
-        vertical-align: top;
-        display: inline-block;
-        border-bottom: solid gray;
-        border-right: solid gray;
-        border-width: thin;
-    }
+  .sort-me-header {
+    /* background-color: #ADD8E6; */
+    width: 200px;
+    min-height: 170px;
+    height: auto;
+    vertical-align: top;
+    display: inline-block;
+    border-bottom: solid gray;
+    border-right: solid gray;
+    border-width: thin;
+  }
 
-    .testclass {
-        background-color: gray;
-        border: 2px solid gray;
-        width: 180px;
-        min-height: 140px;
-        margin: 10px 10px 10px;
-        padding: 10px;
-    }
+  .testclass {
+    background-color: gray;
+    border: 2px solid gray;
+    width: 180px;
+    min-height: 140px;
+    margin: 10px 10px 10px;
+    padding: 10px;
+  }
 
-    .sticky {
-        right: 0;
-        z-index: 150;
-        width: 180px;
-        min-height: 140px;
-        margin: 10px 10px 10px;
-        padding: 10px;
-        font-size: 14px;
-        color: #000;
-        background: rgba(255, 255, 51, 0.8);
-        box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.3);
-    }
+  .sticky {
+    right: 0;
+    z-index: 150;
+    width: 180px;
+    min-height: 140px;
+    margin: 10px 10px 10px;
+    padding: 10px;
+    font-size: 14px;
+    color: #000;
+    background: rgba(255, 255, 51, 0.8);
+    box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.3);
+  }
 
-    .sticky header {
-        background: purple;
-    }
+  .sticky header {
+    background: purple;
+  }
 
-    .ui-helper {
-        width: 100% !important;
-    }
+  .ui-helper {
+    width: 100% !important;
+  }
 </style>

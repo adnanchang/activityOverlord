@@ -16,21 +16,24 @@ module.exports = {
         console.log(err);
       }
 
-      Iteration.create({ 
+      Iteration.create({
         headerRows: 1,
         headerColumns: 10,
         storyColumns: 10,
-        board: board.id 
-      }).exec(function iterationCreated(
-        err,
-        iteration
-      ) {
+        board: board.id
+      }).exec(function iterationCreated(err, iteration) {
         if (err) {
           console.log(err);
         }
 
-        console.log(board);
-        res.redirect("/board/list");
+        Draft.create({
+          board: board.id
+        }).exec(function(err, draft) {
+          if (err) next(err);
+
+          console.log(board);
+          res.redirect("/board/list");
+        });
       });
     });
   },
@@ -61,13 +64,13 @@ module.exports = {
           return res.redirect("/");
         }
 
-        CardType.find({}).exec(function (err, cardTypes){
+        CardType.find({}).exec(function(err, cardTypes) {
           if (err) next(err);
 
           return res.view({
             board: board,
             cardTypes: cardTypes
-          })
+          });
         });
       }
     );
